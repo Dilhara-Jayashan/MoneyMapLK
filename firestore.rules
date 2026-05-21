@@ -1,0 +1,457 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function data() {
+      return request.resource.data;
+    }
+
+    function has(field) {
+      return data().keys().hasAny([field]);
+    }
+
+    function value(field) {
+      return data().get(field, null);
+    }
+
+    function isNumber(amount) {
+      return amount is int || amount is float;
+    }
+
+    function isNonEmptyString(text) {
+      return text is string && text.size() > 0;
+    }
+
+    function requiredString(field) {
+      return has(field) && isNonEmptyString(value(field));
+    }
+
+    function optionalString(field) {
+      return !has(field) || value(field) == null || value(field) is string;
+    }
+
+    function optionalBool(field) {
+      return !has(field) || value(field) == null || value(field) is bool;
+    }
+
+    function optionalTimestamp(field) {
+      return !has(field) || value(field) == null || value(field) is timestamp;
+    }
+
+    function requiredTimestamp(field) {
+      return has(field) && value(field) is timestamp;
+    }
+
+    function optionalNumber(field) {
+      return !has(field) || value(field) == null || isNumber(value(field));
+    }
+
+    function positiveMoney(field) {
+      return has(field) && isNumber(value(field)) && value(field) > 0;
+    }
+
+    function nonNegativeMoney(field) {
+      return has(field) && isNumber(value(field)) && value(field) >= 0;
+    }
+
+    function optionalNonNegativeMoney(field) {
+      return !has(field) || value(field) == null || (isNumber(value(field)) && value(field) >= 0);
+    }
+
+    function optionalPositiveMoney(field) {
+      return !has(field) || value(field) == null || (isNumber(value(field)) && value(field) > 0);
+    }
+
+    function validCurrency(currency) {
+      return currency in ['LKR', 'USD'];
+    }
+
+    function validCurrencyField(field) {
+      return has(field) && value(field) is string && validCurrency(value(field));
+    }
+
+    function optionalCurrencyField(field) {
+      return !has(field) || value(field) == null || (value(field) is string && validCurrency(value(field)));
+    }
+
+    function optionalCurrencyList(field) {
+      return !has(field) ||
+        value(field) == null ||
+        (value(field) is list && value(field).hasOnly(['LKR', 'USD']));
+    }
+
+    function validMoneyBundle() {
+      return positiveMoney('originalAmount') &&
+        validCurrencyField('originalCurrency') &&
+        positiveMoney('exchangeRateToLkr') &&
+        positiveMoney('convertedAmountLkr') &&
+        (
+          (value('originalCurrency') == 'LKR' &&
+            value('exchangeRateToLkr') == 1 &&
+            value('convertedAmountLkr') == value('originalAmount')) ||
+          (value('originalCurrency') == 'USD' &&
+            value('exchangeRateToLkr') >= 100 &&
+            value('exchangeRateToLkr') <= 1000)
+        );
+    }
+
+    function validExpenseChoice() {
+      return value('isCommitted') is bool &&
+        value('isDiscretionary') is bool &&
+        (
+          (value('isCommitted') == true && value('isDiscretionary') == false) ||
+          (value('isCommitted') == false && value('isDiscretionary') == true)
+        );
+    }
+
+    function validUserProfile(userId) {
+      return data().keys().hasAll(['uid', 'displayName', 'email']) &&
+        data().keys().hasOnly([
+          'uid',
+          'displayName',
+          'email',
+          'city',
+          'occupation',
+          'defaultCurrency',
+          'supportedCurrencies',
+          'currentSavingsLkr',
+          'monthlySalaryLkr',
+          'plannedSavingsAllocationLkr',
+          'safeToSpendBufferLkr',
+          'selectedGoalId',
+          'setupCompleted',
+          'financialMonthStartDay',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('uid') == userId &&
+        requiredString('displayName') &&
+        requiredString('email') &&
+        optionalString('city') &&
+        optionalString('occupation') &&
+        optionalCurrencyField('defaultCurrency') &&
+        optionalCurrencyList('supportedCurrencies') &&
+        optionalNonNegativeMoney('currentSavingsLkr') &&
+        optionalPositiveMoney('monthlySalaryLkr') &&
+        optionalNonNegativeMoney('plannedSavingsAllocationLkr') &&
+        optionalNonNegativeMoney('safeToSpendBufferLkr') &&
+        optionalString('selectedGoalId') &&
+        optionalBool('setupCompleted') &&
+        (
+          !has('financialMonthStartDay') ||
+          (value('financialMonthStartDay') is int &&
+            value('financialMonthStartDay') >= 1 &&
+            value('financialMonthStartDay') <= 31)
+        ) &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    function validTransaction(userId, transactionId) {
+      return data().keys().hasAll([
+          'transactionId',
+          'userId',
+          'type',
+          'title',
+          'category',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'transactionDate',
+          'monthId',
+          'paymentMethod',
+          'isCommitted',
+          'isDiscretionary',
+          'isRecurring',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data().keys().hasOnly([
+          'transactionId',
+          'userId',
+          'type',
+          'title',
+          'category',
+          'incomeSource',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'transactionDate',
+          'monthId',
+          'paymentMethod',
+          'note',
+          'isCommitted',
+          'isDiscretionary',
+          'isRecurring',
+          'recurringPaymentId',
+          'invoiceId',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('transactionId') == transactionId &&
+        value('userId') == userId &&
+        value('type') in ['INCOME', 'EXPENSE'] &&
+        requiredString('title') &&
+        requiredString('category') &&
+        requiredString('monthId') &&
+        requiredString('paymentMethod') &&
+        optionalString('note') &&
+        optionalString('recurringPaymentId') &&
+        optionalString('invoiceId') &&
+        requiredTimestamp('transactionDate') &&
+        value('isRecurring') is bool &&
+        validMoneyBundle() &&
+        (
+          (value('type') == 'INCOME' &&
+            value('incomeSource') in [
+              'SALARY',
+              'FREELANCE',
+              'ADSENSE',
+              'CRYPTO',
+              'INVESTMENT',
+              'REFUND',
+              'OTHER'
+            ] &&
+            value('isCommitted') == false &&
+            value('isDiscretionary') == false) ||
+          (value('type') == 'EXPENSE' && validExpenseChoice())
+        ) &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    function validGoal(userId, goalId) {
+      return data().keys().hasAll([
+          'goalId',
+          'userId',
+          'name',
+          'targetAmountLkr',
+          'savedAmountLkr',
+          'remainingAmountLkr',
+          'progressPercentage',
+          'isActive',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data().keys().hasOnly([
+          'goalId',
+          'userId',
+          'name',
+          'description',
+          'targetAmountLkr',
+          'savedAmountLkr',
+          'remainingAmountLkr',
+          'progressPercentage',
+          'deadline',
+          'targetDate',
+          'priority',
+          'isActive',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('goalId') == goalId &&
+        value('userId') == userId &&
+        requiredString('name') &&
+        optionalString('description') &&
+        positiveMoney('targetAmountLkr') &&
+        nonNegativeMoney('savedAmountLkr') &&
+        nonNegativeMoney('remainingAmountLkr') &&
+        nonNegativeMoney('progressPercentage') &&
+        value('savedAmountLkr') <= value('targetAmountLkr') &&
+        value('remainingAmountLkr') <= value('targetAmountLkr') &&
+        value('progressPercentage') <= 100 &&
+        optionalString('deadline') &&
+        optionalTimestamp('targetDate') &&
+        optionalString('priority') &&
+        value('isActive') is bool &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    function validRecurringPayment(userId, paymentId) {
+      return data().keys().hasAll([
+          'paymentId',
+          'userId',
+          'title',
+          'category',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'frequency',
+          'nextDueDate',
+          'paymentMethod',
+          'isActive',
+          'isCommitted',
+          'isDiscretionary',
+          'isRecurring',
+          'autoCreateTransaction',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data().keys().hasOnly([
+          'paymentId',
+          'userId',
+          'title',
+          'category',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'frequency',
+          'nextDueDate',
+          'lastPaidDate',
+          'paymentMethod',
+          'isActive',
+          'isCommitted',
+          'isDiscretionary',
+          'isRecurring',
+          'autoCreateTransaction',
+          'note',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('paymentId') == paymentId &&
+        value('userId') == userId &&
+        requiredString('title') &&
+        requiredString('category') &&
+        requiredString('paymentMethod') &&
+        value('frequency') in ['WEEKLY', 'MONTHLY', 'YEARLY'] &&
+        requiredTimestamp('nextDueDate') &&
+        optionalTimestamp('lastPaidDate') &&
+        value('isActive') is bool &&
+        value('isRecurring') == true &&
+        value('autoCreateTransaction') is bool &&
+        optionalString('note') &&
+        validMoneyBundle() &&
+        validExpenseChoice() &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    function validInvoice(userId, invoiceId) {
+      return data().keys().hasAll([
+          'invoiceId',
+          'userId',
+          'clientName',
+          'projectName',
+          'status',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'issuedDate',
+          'dueDate',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data().keys().hasOnly([
+          'invoiceId',
+          'userId',
+          'clientName',
+          'projectName',
+          'invoiceNumber',
+          'status',
+          'originalAmount',
+          'originalCurrency',
+          'exchangeRateToLkr',
+          'convertedAmountLkr',
+          'issuedDate',
+          'dueDate',
+          'paidDate',
+          'followUpDate',
+          'followUpNote',
+          'linkedTransactionId',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('invoiceId') == invoiceId &&
+        value('userId') == userId &&
+        requiredString('clientName') &&
+        requiredString('projectName') &&
+        optionalString('invoiceNumber') &&
+        value('status') in ['PAID', 'UNPAID', 'OVERDUE'] &&
+        validMoneyBundle() &&
+        requiredTimestamp('issuedDate') &&
+        requiredTimestamp('dueDate') &&
+        optionalTimestamp('paidDate') &&
+        optionalTimestamp('followUpDate') &&
+        optionalString('followUpNote') &&
+        optionalString('linkedTransactionId') &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    function validMonthlySummary(userId, monthId) {
+      return data().keys().hasAll(['monthId', 'userId']) &&
+        data().keys().hasOnly([
+          'monthId',
+          'userId',
+          'totalIncomeLkr',
+          'totalExpenseLkr',
+          'netBalanceLkr',
+          'committedSpendingLkr',
+          'discretionarySpendingLkr',
+          'safeToSpendLkr',
+          'savingsRate',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        value('monthId') == monthId &&
+        value('userId') == userId &&
+        optionalNonNegativeMoney('totalIncomeLkr') &&
+        optionalNonNegativeMoney('totalExpenseLkr') &&
+        optionalNumber('netBalanceLkr') &&
+        optionalNonNegativeMoney('committedSpendingLkr') &&
+        optionalNonNegativeMoney('discretionarySpendingLkr') &&
+        optionalNonNegativeMoney('safeToSpendLkr') &&
+        optionalNumber('savingsRate') &&
+        optionalTimestamp('createdAt') &&
+        optionalTimestamp('updatedAt');
+    }
+
+    match /users/{userId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validUserProfile(userId);
+
+      match /transactions/{transactionId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validTransaction(userId, transactionId);
+      }
+
+      match /goals/{goalId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validGoal(userId, goalId);
+      }
+
+      match /recurringPayments/{paymentId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validRecurringPayment(userId, paymentId);
+      }
+
+      match /invoices/{invoiceId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validInvoice(userId, invoiceId);
+      }
+
+      match /monthlySummaries/{monthId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validMonthlySummary(userId, monthId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

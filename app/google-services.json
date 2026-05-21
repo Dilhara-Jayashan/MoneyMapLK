@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "832296392416",
+    "project_id": "moneymaplk",
+    "storage_bucket": "moneymaplk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832296392416:android:e0927f3e80acf8884ae285",
+        "android_client_info": {
+          "package_name": "com.example.moneymaplk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "832296392416-ej85ndej5escr6osj7v1b90nk8sk0up0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.moneymaplk",
+            "certificate_hash": "b9c5d93543fddd89a669a01ad2941119718549e3"
+          }
+        },
+        {
+          "client_id": "832296392416-qn5chossis1b2sd2hk147j6cpfv0oooj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6tgT5mkB03KqVy0o2itvQ_UfMQT4G5x4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "832296392416-qn5chossis1b2sd2hk147j6cpfv0oooj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
