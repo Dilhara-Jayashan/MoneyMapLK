@@ -87,4 +87,8 @@ object RecurringScheduleCalculator {
             set(Calendar.MILLISECOND, 999)
         }.time
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/recurring
