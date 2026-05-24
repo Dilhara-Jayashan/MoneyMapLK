@@ -399,7 +399,7 @@ private fun BalanceCard(summary: DashboardSummary) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = formatMoney(summary.safeToSpendLkr + summary.safeToSpendBufferLkr, summary.baseCurrency),
+            text = formatMoney(summary.safeToSpendLkr , summary.baseCurrency),
             style = MaterialTheme.typography.displaySmall,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             fontWeight = FontWeight.ExtraBold,
