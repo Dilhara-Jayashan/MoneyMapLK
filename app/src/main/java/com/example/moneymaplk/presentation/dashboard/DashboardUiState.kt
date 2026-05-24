@@ -21,6 +21,7 @@ data class DashboardSummary(
     val monthlyNetLkr: Double,
     val safeToSpendLkr: Double,
     val rawSafeToSpendLkr: Double,
+    val safeToSpendBufferLkr: Double,
     val safeToSpendHelperText: String,
     val upcomingRequiredRecurringPaymentsLkr: Double,
     val expectedIncomeThisMonthLkr: Double,
