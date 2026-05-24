@@ -8,7 +8,7 @@ The app uses Jetpack Compose, MVVM, Firebase Authentication, and Cloud Firestore
 
 MoneyMap LK helps users understand where their money comes from, where it goes, and how much is safe to spend after savings plans and emergency buffers. The app focuses on practical finance visibility rather than complex accounting.
 
-Version 1 includes authentication, financial setup, transaction tracking, a real-time dashboard, goals, recurring payments, payment follow-ups, reports, profile settings, and Firestore security rules.
+Version 1 includes authentication, financial setup, transaction tracking, quick expense categories, a real-time dashboard, goals, recurring payments, payment follow-ups, reports, profile settings, and Firestore security rules.
 
 ## Problem Scenario Summary
 
@@ -33,15 +33,16 @@ MoneyMap LK addresses this by combining income and expense tracking, LKR/USD con
 - LKR and USD money entry with exchange-rate conversion
 - User profile and financial settings
 - Income and expense transaction creation
+- Custom quick categories/templates for faster expense entry
 - Transaction list with income and expense filters
-- Dashboard with current savings, monthly income, monthly expenses, safe-to-spend, featured goal, recent transactions, spending awareness, and smart insights
+- Dashboard with current available balance, monthly income, monthly expenses, safe-to-spend, featured goal, recent transactions, spending awareness, and smart insights
 - Multiple savings goals
 - Selected goal support for the Home dashboard
 - Goal contribution validation against available balance and remaining goal amount
 - Recurring payment creation and pause/deactivation
 - Payment follow-ups for expected money
 - Automatic overdue display logic for unpaid follow-ups past the expected date
-- Reports for income, expenses, net balance, savings rate, income sources, spending categories, recurring commitments, and follow-up summaries
+- Reports for income, expenses, net balance, income left after expenses, income sources, spending categories, recurring commitments, and follow-up summaries
 - Profile editing and logout
 - Centralized finance validation and calculation helpers
 - Firestore security rules for owner-only access
@@ -139,6 +140,7 @@ users/{userId}/transactions/{transactionId}
 users/{userId}/goals/{goalId}
 users/{userId}/recurringPayments/{paymentId}
 users/{userId}/invoices/{invoiceId}
+users/{userId}/categories/{categoryId}
 users/{userId}/monthlySummaries/{monthId}
 ```
 
@@ -149,6 +151,7 @@ Collection purposes:
 - `goals`: savings goals and goal progress
 - `recurringPayments`: subscriptions and repeated commitments
 - `invoices`: payment follow-ups for money expected from clients, refunds, platforms, or other people
+- `categories`: user-created quick expense templates for faster entry
 - `monthlySummaries`: planned structure for monthly summary data
 
 ## Build and Run Instructions
@@ -183,14 +186,14 @@ Suggested demo sequence:
 2. Register with email/password, or continue with Google if configured.
 3. Complete financial setup:
    - Preferred currency
-   - Current savings
-   - Monthly salary baseline
+   - Current available balance
+   - Monthly income baseline
    - Planned monthly savings
    - Emergency buffer
-   - MacBook Pro M4 goal
+   - Savings goal name, amount, and deadline
 4. View the Home dashboard.
 5. Add an income transaction, such as salary or AdSense.
-6. Add an expense transaction and choose required or flexible spending.
+6. Add an expense transaction, choose a category, and optionally save it as a quick category.
 7. Open Activity to view and filter transactions.
 8. Open Goals and add a contribution or create another goal.
 9. Mark a goal as **Show on Home** and return to Home.

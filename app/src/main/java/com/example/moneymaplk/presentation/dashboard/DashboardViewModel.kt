@@ -1,4 +1,4 @@
-package com.example.moneymaplk.presentation.dashboard
+xpackage com.example.moneymaplk.presentation.dashboard
 
 import androidx.lifecycle.ViewModel
 import com.example.moneymaplk.data.repository.FirebaseGoalRepository
